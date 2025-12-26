@@ -48,6 +48,46 @@ check_system() {
     log "System check passed: Debian detected."
 }
 
+# 1.1 Check and Add Swap
+check_and_add_swap() {
+    log "Checking memory and swap..."
+    
+    # Check physical memory size (in MB)
+    MEM_TOTAL=$(free -m | awk '/^Mem:/{print $2}')
+    
+    # If memory is less than 2048MB (2GB)
+    if [ "$MEM_TOTAL" -lt 2048 ]; then
+        log "Low memory detected (${MEM_TOTAL}MB). Checking swap..."
+        
+        # Check current swap size
+        SWAP_TOTAL=$(free -m | awk '/^Swap:/{print $2}')
+        
+        if [ "$SWAP_TOTAL" -lt 1024 ]; then
+            log "Swap is insufficient. Creating 2GB swap file..."
+            
+            # Create swap file
+            if ! fallocate -l 2G /swapfile 2>/dev/null; then
+                dd if=/dev/zero of=/swapfile bs=1M count=2048
+            fi
+            
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            
+            # Make it permanent if not already in fstab
+            if ! grep -q "/swapfile" /etc/fstab; then
+                echo '/swapfile none swap sw 0 0' >> /etc/fstab
+            fi
+            
+            log "Swap created and enabled successfully."
+        else
+            log "Swap size is sufficient (${SWAP_TOTAL}MB)."
+        fi
+    else
+        log "Memory is sufficient (${MEM_TOTAL}MB)."
+    fi
+}
+
 # 2. Install Dependencies
 install_dependencies() {
     log "Updating system and installing dependencies..."
@@ -329,6 +369,7 @@ if [ -n "$1" ]; then
             ;;
         update)
             check_system
+            check_and_add_swap
             deploy_app
             setup_service
             log "Update Complete!"
