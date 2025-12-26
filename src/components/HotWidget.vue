@@ -68,20 +68,6 @@ const fetchHot = async (type: "weibo" | "news" | "huxiu", force = false) => {
 onMounted(() => {
   fetchHot("weibo");
 });
-
-const handleScrollIsolation = (e: WheelEvent) => {
-  const el = e.currentTarget as HTMLDivElement;
-  const { scrollTop, scrollHeight, clientHeight } = el;
-  const delta = e.deltaY;
-
-  const isAtTop = scrollTop <= 0;
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-
-  if ((isAtTop && delta < 0) || (isAtBottom && delta > 0)) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-};
 </script>
 
 <template>
@@ -116,7 +102,7 @@ const handleScrollIsolation = (e: WheelEvent) => {
     </div>
 
     <div class="flex-1 overflow-hidden relative">
-      <div class="h-full overflow-y-auto custom-scrollbar p-0" @wheel="handleScrollIsolation">
+      <div class="h-full overflow-y-auto custom-scrollbar p-0">
         <div
           v-if="loading && list.length === 0"
           class="p-8 text-center text-gray-400 text-xs animate-pulse"

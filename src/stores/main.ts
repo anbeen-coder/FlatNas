@@ -116,7 +116,6 @@ export const useMainStore = defineStore("main", () => {
   const appConfig = ref<AppConfig>({
     background: "/default-wallpaper.svg",
     mobileBackground: "/default-wallpaper.svg",
-    solidBackgroundColor: "",
     enableMobileWallpaper: true,
     fixedWallpaper: false,
     deviceMode: "auto",
@@ -175,9 +174,6 @@ export const useMainStore = defineStore("main", () => {
     mobileWallpaperOrder: [],
     sidebarViewMode: "bookmarks",
     empireMode: false,
-    customCss: "",
-    customJs: "",
-    customJsDisclaimerAgreed: false,
     mouseHoverEffect: "scale",
   });
 

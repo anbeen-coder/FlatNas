@@ -72,20 +72,6 @@ const remove = (index: number) => {
   pushUpdate();
   handleSave();
 };
-
-const handleScrollIsolation = (e: WheelEvent) => {
-  const el = e.currentTarget as HTMLDivElement;
-  const { scrollTop, scrollHeight, clientHeight } = el;
-  const delta = e.deltaY;
-
-  const isAtTop = scrollTop <= 0;
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-
-  if ((isAtTop && delta < 0) || (isAtBottom && delta > 0)) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-};
 </script>
 
 <template>
@@ -108,7 +94,7 @@ const handleScrollIsolation = (e: WheelEvent) => {
       >
     </div>
 
-    <div class="flex-1 overflow-y-auto space-y-1 scrollbar-hide" @wheel="handleScrollIsolation">
+    <div class="flex-1 overflow-y-auto space-y-1 scrollbar-hide">
       <div v-for="(item, idx) in widget.data" :key="item.id" class="flex items-start gap-2 group">
         <input
           type="checkbox"
@@ -118,8 +104,7 @@ const handleScrollIsolation = (e: WheelEvent) => {
         />
         <span
           class="text-xs flex-1 break-all whitespace-normal leading-tight"
-          :class="item.done ? 'line-through' : ''"
-          :style="{ color: item.done ? '#9ca3af' : widget.textColor || '#374151' }"
+          :class="item.done ? 'text-gray-400 line-through' : 'text-gray-700'"
           >{{ item.text }}</span
         >
         <button
