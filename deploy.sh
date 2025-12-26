@@ -142,11 +142,48 @@ deploy_app() {
     else
         log "Directory exists. Pulling latest changes..."
         cd "$APP_DIR"
-        # Stash local changes to config files if any, to avoid conflict
+        
+        # Reset any potential conflict state from previous failed runs
+        if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ] || [ -f ".git/MERGE_HEAD" ]; then
+            log "Detected interrupted git operation. Aborting..."
+            git rebase --abort 2>/dev/null || true
+            git merge --abort 2>/dev/null || true
+        fi
+
+        # Try standard update first
+        log "Attempting standard update..."
         git stash
-        # Use rebase to avoid "divergent branches" error and keep history linear
-        git pull --rebase
-        git stash pop || true
+        
+        if git pull --rebase; then
+            git stash pop 2>/dev/null || true
+            log "Update successful."
+        else
+            log "Standard update failed due to conflicts. Attempting forced update (User data will be preserved)..."
+            
+            # Abort the failed rebase
+            git rebase --abort 2>/dev/null || true
+            
+            # 1. Backup User Data
+            if [ -d "server/data" ]; then
+                log "Backing up user data (JSON files)..."
+                mkdir -p server/data_backup
+                cp server/data/*.json server/data_backup/ 2>/dev/null || true
+            fi
+            
+            # 2. Force Reset to Remote
+            log "Resetting code to latest version..."
+            git fetch --all
+            git reset --hard origin/main
+            
+            # 3. Restore User Data
+            if [ -d "server/data_backup" ]; then
+                log "Restoring user data..."
+                cp -f server/data_backup/*.json server/data/ 2>/dev/null || true
+                rm -rf server/data_backup
+            fi
+            
+            log "Forced update completed successfully."
+        fi
     fi
 
     cd "$APP_DIR"
