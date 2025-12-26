@@ -152,10 +152,12 @@ deploy_app() {
         log "Attempting standard update..."
         git stash
         
+        # Use a subshell or explicit logic to prevent exit
         if git pull --rebase origin main; then
             git stash pop 2>/dev/null || true
             log "Update successful."
         else
+            # Explicitly capture the failure and proceed
             log "Standard update failed due to conflicts. Attempting forced update (User data will be preserved)..."
             
             # Abort the failed rebase
