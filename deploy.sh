@@ -4,8 +4,6 @@
 # Author: Trae AI Assistant
 # Description: Automated deployment of FlatNas on Debian systems with Nginx and Systemd.
 
-set -e
-
 # Configuration
 APP_DIR="/opt/flatnas"
 REPO_URL="https://github.com/Garry-QD/FlatNas.git"
@@ -154,7 +152,7 @@ deploy_app() {
         log "Attempting standard update..."
         git stash
         
-        if git pull --rebase; then
+        if git pull --rebase origin main; then
             git stash pop 2>/dev/null || true
             log "Update successful."
         else
