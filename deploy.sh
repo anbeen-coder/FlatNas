@@ -53,11 +53,11 @@ install_dependencies() {
     log "Updating system and installing dependencies..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
-    apt-get install -y -qq curl git gnupg2 ca-certificates lsb-release
+    apt-get install -y -qq curl git gnupg2 ca-certificates lsb-release build-essential python3
 
     # Install Node.js
-    if ! command -v node &> /dev/null; then
-        log "Installing Node.js ${NODE_MAJOR}..."
+    if ! command -v node &> /dev/null || [ $(node -v | cut -d'.' -f1 | cut -c2-) -lt $NODE_MAJOR ]; then
+        log "Installing or Updating Node.js to ${NODE_MAJOR}..."
         mkdir -p /etc/apt/keyrings
         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
@@ -123,6 +123,11 @@ deploy_app() {
 setup_service() {
     log "Configuring Systemd service..."
     
+    NODE_BIN=$(which node)
+    if [ -z "$NODE_BIN" ]; then
+        error "Node.js binary not found. Installation might have failed."
+    fi
+
     cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=FlatNas Server
@@ -132,7 +137,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=${APP_DIR}
-ExecStart=$(which node) server/server.js
+ExecStart=${NODE_BIN} server/server.js
 Restart=on-failure
 Environment=NODE_ENV=production
 Environment=PORT=3000
